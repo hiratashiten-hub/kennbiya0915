@@ -1,0 +1,792 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>健美家 週次アクセストラッカー</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+JP:wght@300;400;500;700&family=DM+Mono:wght@400;500&display=swap');
+:root {
+  --bg:#f4f6fa; --surface:#ffffff; --surface2:#f0f2f7; --border:#dde1eb;
+  --accent:#3a6fdb; --accent2:#e05252; --accent3:#27a97a;
+  --text:#1e2235; --muted:#8a93ad;
+}
+*{box-sizing:border-box;margin:0;padding:0;}
+body{font-family:'Noto Sans JP',sans-serif;background:var(--bg);color:var(--text);min-height:100vh;font-size:14px;}
+header{background:var(--surface);border-bottom:1px solid var(--border);padding:16px 24px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;}
+.logo{font-size:16px;font-weight:700;}.logo span{color:var(--accent);}
+.badge{font-family:'DM Mono',monospace;background:var(--surface2);border:1px solid var(--border);border-radius:6px;padding:6px 12px;font-size:12px;color:var(--muted);}
+.main{max-width:1200px;margin:0 auto;padding:24px;}
+.tabs{display:flex;gap:4px;margin-bottom:24px;background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:4px;width:fit-content;}
+.tab{padding:8px 20px;border-radius:7px;cursor:pointer;font-size:13px;font-weight:500;color:var(--muted);border:none;background:none;font-family:'Noto Sans JP',sans-serif;}
+.tab.active{background:var(--accent);color:#fff;}
+.sec{display:none;}.sec.active{display:block;}
+.sec-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px;}
+.sec-title{font-size:15px;font-weight:700;}
+.tip{font-size:11px;color:var(--muted);margin-bottom:16px;}
+input[type=date],input[type=text],input[type=number]{background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);padding:7px 12px;font-family:'DM Mono',monospace;font-size:12px;outline:none;}
+input[type=date]:focus,input[type=text]:focus,input[type=number]:focus{border-color:var(--accent);}
+input[type=number]{width:72px;text-align:right;}
+.tbl{width:100%;border-collapse:separate;border-spacing:0 4px;}
+.tbl th{font-size:11px;font-weight:500;color:var(--muted);text-transform:uppercase;letter-spacing:.08em;padding:6px 12px;text-align:center;}
+.tbl th.left{text-align:left;}
+.tbl tr.row td{background:var(--surface);border-top:1px solid var(--border);border-bottom:1px solid var(--border);padding:10px 12px;vertical-align:middle;}
+.tbl tr.row td:first-child{border-left:1px solid var(--border);border-radius:8px 0 0 8px;}
+.tbl tr.row td:last-child{border-right:1px solid var(--border);border-radius:0 8px 8px 0;}
+.tbl input{background:transparent !important;}
+.num{font-family:'DM Mono',monospace;font-size:11px;color:var(--muted);text-align:center;width:28px;}
+.name-input{width:100%;font-size:13px;font-family:'Noto Sans JP',sans-serif;font-weight:500;background:transparent;border:none;padding:4px 8px;color:var(--text);}
+.name-input:focus{outline:1px solid var(--accent);}
+.center{text-align:center;}
+.btn{padding:8px 16px;border-radius:7px;font-size:13px;font-weight:500;cursor:pointer;border:none;font-family:'Noto Sans JP',sans-serif;}
+.btn-blue{background:var(--accent);color:#fff;}.btn-blue:hover{opacity:.85;}
+.btn-green{background:var(--accent3);color:#fff;}.btn-green:hover{opacity:.85;}
+.btn-out{background:transparent;border:1px solid var(--border);color:var(--muted);}.btn-out:hover{border-color:var(--accent);color:var(--accent);}
+.btn-sm{padding:5px 10px;font-size:12px;}
+.row-flex{display:flex;gap:8px;align-items:center;flex-wrap:wrap;}
+.summary{display:flex;gap:16px;margin-bottom:20px;flex-wrap:wrap;}
+.scard{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 20px;flex:1;min-width:100px;}
+.scard-label{font-size:11px;color:var(--muted);margin-bottom:4px;}
+.scard-val{font-family:'DM Mono',monospace;font-size:22px;font-weight:500;}
+.rank-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;overflow:hidden;margin-bottom:16px;}
+.rank-header{padding:14px 18px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;}
+.rank-row{display:flex;align-items:center;padding:10px 18px;border-bottom:1px solid rgba(200,210,230,.5);gap:12px;}
+.rank-row:last-child{border-bottom:none;}
+.rnum{font-family:'DM Mono',monospace;font-size:18px;font-weight:500;color:var(--muted);width:28px;text-align:center;flex-shrink:0;}
+.rnum.gold{color:#f39c12;}.rnum.silver{color:#95a5a6;}.rnum.bronze{color:#cd7f32;}
+.rname{flex:1;font-size:13px;font-weight:500;}
+.rscore{font-family:'DM Mono',monospace;font-size:20px;font-weight:500;}
+.alert-box{background:rgba(224,82,82,.06);border:1px solid rgba(224,82,82,.3);border-radius:12px;padding:18px;margin-bottom:20px;}
+.alert-title{font-size:13px;font-weight:700;color:var(--accent2);margin-bottom:10px;}
+.alert-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid rgba(224,82,82,.1);}
+.alert-row:last-child{border-bottom:none;}
+.htbl{width:100%;border-collapse:collapse;}
+.htbl th,.htbl td{padding:10px 14px;text-align:left;border-bottom:1px solid var(--border);font-size:12px;}
+.htbl th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.08em;background:var(--surface2);}
+.csv-grid{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-top:16px;}
+.csv-card{background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:20px;}
+.csv-card h3{font-size:14px;font-weight:700;margin-bottom:10px;}
+textarea{width:100%;height:130px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-family:'DM Mono',monospace;font-size:11px;padding:10px;resize:vertical;outline:none;}
+.empty{text-align:center;padding:50px 0;color:var(--muted);font-size:13px;}
+.new-badge{font-size:10px;background:rgba(39,174,96,.15);color:var(--accent3);border-radius:4px;padding:2px 6px;font-weight:700;margin-left:6px;}
+@media(max-width:700px){.csv-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<header>
+  <div class="logo">健美家アクセス<span>トラッカー</span></div>
+  <div class="badge" id="dateBadge">集計日: —</div>
+</header>
+<div class="main">
+  <div style="background:#ffffff;border:1px solid var(--border);border-radius:12px;padding:20px 24px;margin-bottom:24px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:8px;">
+      <div style="font-size:18px;font-weight:700;">健美家 週次アクセストラッカー</div>
+      <div id="periodLabel" style="font-family:'DM Mono',monospace;font-size:13px;color:var(--accent);background:#eef3ff;border:1px solid #c5d5f8;border-radius:6px;padding:6px 14px;"></div>
+    </div>
+    <div style="font-size:13px;color:var(--muted);line-height:1.8;border-top:1px solid var(--border);padding-top:12px;">
+      <div>📊 <strong>測定内容：</strong>健美家に掲載中の物件ごとに、累計アクセス数を毎週火曜日に記録し、前週との差分（週次増加数）を比較する。</div>
+      <div style="margin-top:6px;">🔄 <strong>入れ替えの基準：</strong>週次増加数が少ない下位3件を入れ替え候補とする。ただし反響が1件以上・お気に入りが3件以上・掲載開始から2週間未満の物件は除外。</div>
+      <div style="margin-top:6px;">⚠️ <strong>注意：</strong>反響・お気に入りは週次ではなく累計の数値を入力する。掲載開始日は管理IDの日付（最初の掲載開始日）を使用する。</div>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab active" id="tab-ranking" onclick="go('ranking')">ランキング</button>
+    <button class="tab" id="tab-input" onclick="go('input')">週次入力</button>
+    <button class="tab" id="tab-history" onclick="go('history')">履歴</button>
+    <button class="tab" id="tab-data" onclick="go('data')">データ管理</button>
+  </div>
+
+  <div class="sec" id="sec-input">
+    <div class="sec-header">
+      <div class="sec-title">今週のデータ入力</div>
+      <div class="row-flex">
+        <span style="font-size:12px;color:var(--muted);">集計日：</span>
+        <input type="date" id="inputDate" onchange="onDateChange()">
+        <button class="btn btn-green" onclick="saveWeek()">✓ 今週分を保存</button>
+      </div>
+    </div>
+    <p class="tip">健美家「掲載中物件一覧」の各物件詳細画面を開き、「健美家アクセス数（累計）」を入力してください。</p>
+    <div style="overflow-x:auto;">
+      <table class="tbl">
+        <thead><tr>
+          <th style="width:28px;">#</th>
+          <th class="left" style="width:260px;">物件名</th>
+          <th style="width:90px;">アクセス数<br>（累計）</th>
+          <th style="width:72px;">お気に入り</th>
+          <th style="width:72px;">反響</th>
+          <th style="width:110px;">掲載開始日<br>（管理ID）</th>
+        </tr></thead>
+        <tbody id="inputBody"></tbody>
+      </table>
+    </div>
+    <div style="margin-top:14px;">
+      <button class="btn btn-out btn-sm" onclick="addProp()">＋ 物件を追加</button>
+    </div>
+  </div>
+
+  <div class="sec active" id="sec-ranking">
+    <div id="rankContent"><div class="empty">まだデータがありません</div></div>
+  </div>
+
+  <div class="sec" id="sec-history">
+    <div id="histContent"><div class="empty">まだデータがありません</div></div>
+  </div>
+
+  <div class="sec" id="sec-data">
+    <p class="tip">毎週、入力後にエクスポートしてCSVを保存してください。次回インポートするとデータが引き継がれます。</p>
+    <div class="csv-grid">
+      <div class="csv-card">
+        <h3>📤 エクスポート（保存）</h3>
+        <textarea id="exportArea" readonly placeholder='「CSVを生成」を押してください'></textarea>
+        <div class="row-flex" style="margin-top:10px;">
+          <button class="btn btn-blue btn-sm" onclick="doExport()">CSVを生成</button>
+          <button class="btn btn-out btn-sm" onclick="doCopy()">コピー</button>
+        </div>
+      </div>
+      <div class="csv-card">
+        <h3>📥 インポート（読み込み）</h3>
+        <textarea id="importArea" placeholder="ここにCSVを貼り付け..."></textarea>
+        <div class="row-flex" style="margin-top:10px;">
+          <button class="btn btn-green btn-sm" onclick="doImport()">読み込む</button>
+          <button class="btn btn-out btn-sm" onclick="doReset()">全リセット</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const DEFAULTS = [
+  {id:'20260629',  name:'練馬区 中古賃貸併用住宅',                      start:'2026-06-29'},
+  {id:'20260624',  name:'新御徒町',                                    start:'2026-06-24'},
+  {id:'20260619b', name:'横浜市泉区白百合2 中古賃貸併用住宅',           start:'2026-06-19'},
+  {id:'20260601',  name:'ライオンズヒルズ町田第二 704号室',              start:'2026-06-01'},
+  {id:'20251229',  name:'座間テラスハウス',                             start:'2025-12-29'},
+  {id:'20260523',  name:'葛飾区新小岩土地',                             start:'2026-05-23'},
+  {id:'20260727c', name:'ライフピアポラリス',                           start:'2026-07-27'},
+  {id:'20260725',  name:'エスパーダ亀有',                               start:'2026-07-25'},
+  {id:'20260810b', name:'杉並区一棟アパート',                            start:'2026-08-10'},
+  {id:'20260810c', name:'ポンテヴェキオ平和台',                          start:'2026-08-10'},
+  {id:'20260818b', name:'ファインキャッスル与野本町',                    start:'2026-08-18'},
+  {id:'20260902a', name:'川越市岸町二丁目',                              start:'2026-08-28'},
+  {id:'20260818c', name:'中野区 一棟アパート',                          start:'2026-08-18'},
+  {id:'20260905a', name:'練馬区 店舗付き住宅',                          start:'2026-09-05'},
+  {id:'20260913a', name:'シャトレー松濤',                               start:'2026-09-13'},
+  {id:'20260913b', name:'Privia亀有',                                  start:'2026-09-13'},
+  {id:'20260913c', name:'Clavier祐天寺・Privia祐天寺',                  start:'2026-09-13'},
+  {id:'20260910a', name:'品川区西大井5丁目',                            start:'2026-09-10'},
+  {id:'20260910b', name:'横浜市青葉区奈良5丁目',                        start:'2026-09-10'},
+];
+
+// 2週前（6/9）のデータ ※新旧物件入れ替え前の最終週
+const WEEK1 = {
+  date: '2026-06-09',
+  entries: [
+    {id:'20260619a', v:0,   f:0, i:0},
+    {id:'20260619b', v:0,   f:0, i:0},
+    {id:'20260607',  v:55,  f:0, i:0},
+    {id:'20260606',  v:71,  f:0, i:0},
+    {id:'20260606b', v:82,  f:0, i:0},
+    {id:'20260601',  v:206, f:0, i:0},
+    {id:'20251229',  v:438, f:0, i:0},
+    {id:'20260528',  v:82,  f:0, i:0},
+    {id:'20260528b', v:93,  f:0, i:0},
+    {id:'20260523',  v:123, f:0, i:0},
+    {id:'20260522',  v:174, f:0, i:2},
+    {id:'20260522b', v:259, f:0, i:2},
+    {id:'20260507',  v:217, f:0, i:1},
+    {id:'20260507b', v:306, f:0, i:11},
+    {id:'20260424',  v:104, f:0, i:0},
+    {id:'20260424b', v:110, f:0, i:0},
+    {id:'20260423',  v:99,  f:0, i:0},
+    {id:'20260409',  v:273, f:0, i:1},
+    {id:'20261017',  v:488, f:0, i:0},
+    {id:'20251014',  v:375, f:0, i:0},
+  ]
+};
+
+// 先週（6/16）のデータ ※新旧物件入れ替え後
+const WEEK2 = {
+  date: '2026-06-16',
+  entries: [
+    {id:'20260619a', v:0,   f:0, i:0},
+    {id:'20260619b', v:0,   f:0, i:0},
+    {id:'20260607',  v:0,   f:0, i:0},
+    {id:'20260606',  v:0,   f:0, i:0},
+    {id:'20260606b', v:0,   f:0, i:0},
+    {id:'20260601',  v:0,   f:0, i:0},
+    {id:'20251229',  v:0,   f:0, i:0},
+    {id:'20260528',  v:0,   f:0, i:0},
+    {id:'20260528b', v:0,   f:0, i:0},
+    {id:'20260523',  v:0,   f:0, i:0},
+    {id:'20260522',  v:0,   f:0, i:0},
+    {id:'20260522b', v:0,   f:0, i:0},
+    {id:'20260507',  v:0,   f:0, i:0},
+    {id:'20260507b', v:0,   f:0, i:0},
+    {id:'20260424',  v:0,   f:0, i:0},
+    {id:'20260424b', v:0,   f:0, i:0},
+    {id:'20260423',  v:0,   f:0, i:0},
+    {id:'20260409',  v:0,   f:0, i:0},
+    {id:'20261017',  v:0,   f:0, i:0},
+    {id:'20251014',  v:0,   f:0, i:0},
+  ]
+};
+
+// 今週（6/23）のデータ
+const WEEK3 = {
+  date: '2026-06-23',
+  entries: [
+    {id:'20260619a', v:321, f:0, i:0},
+    {id:'20260619b', v:65,  f:0, i:0},
+    {id:'20260607',  v:81,  f:0, i:1},
+    {id:'20260606',  v:111, f:0, i:0},
+    {id:'20260606b', v:105, f:0, i:0},
+    {id:'20260601',  v:217, f:0, i:0},
+    {id:'20251229',  v:462, f:0, i:0},
+    {id:'20260528',  v:103, f:0, i:0},
+    {id:'20260528b', v:124, f:0, i:0},
+    {id:'20260523',  v:143, f:0, i:0},
+    {id:'20260522',  v:200, f:0, i:3},
+    {id:'20260522b', v:286, f:0, i:2},
+    {id:'20260507',  v:232, f:0, i:1},
+    {id:'20260507b', v:327, f:0, i:11},
+    {id:'20260424',  v:125, f:0, i:0},
+    {id:'20260424b', v:128, f:0, i:0},
+    {id:'20260423',  v:116, f:0, i:0},
+    {id:'20260409',  v:327, f:0, i:1},
+    {id:'20261017',  v:515, f:0, i:0},
+    {id:'20251014',  v:390, f:0, i:0},
+  ]
+};
+
+// 今週（6/30）のデータ ※17件すべて入力済み
+const WEEK4 = {
+  date: '2026-06-30',
+  entries: [
+    {id:'20260629',  v:47,  f:0, i:0},
+    {id:'20260624',  v:48,  f:0, i:0},
+    {id:'20260619a', v:331, f:0, i:0},
+    {id:'20260619b', v:84,  f:0, i:0},
+    {id:'20260607',  v:90,  f:0, i:1},
+    {id:'20260606b', v:119, f:0, i:0},
+    {id:'20260601',  v:222, f:0, i:0},
+    {id:'20251229',  v:474, f:0, i:0},
+    {id:'20260528b', v:130, f:0, i:0},
+    {id:'20260523',  v:153, f:0, i:0},
+    {id:'20260522',  v:229, f:0, i:4},
+    {id:'20260522b', v:295, f:0, i:2},
+    {id:'20260507',  v:236, f:0, i:1},
+    {id:'20260507b', v:338, f:0, i:11},
+    {id:'20260424',  v:131, f:0, i:0},
+    {id:'20260424b', v:134, f:0, i:0},
+    {id:'20260409',  v:387, f:1, i:0},
+  ]
+};
+
+// 今週（7/7）のデータ
+const WEEK5 = {
+  date: '2026-07-07',
+  entries: [
+    {id:'20260704a', v:60,  f:0, i:0},
+    {id:'20260704b', v:74,  f:0, i:0},
+    {id:'20260704c', v:65,  f:0, i:0},
+    {id:'20260703a', v:68,  f:0, i:0},
+    {id:'20260703b', v:96,  f:0, i:0},
+    {id:'20260703c', v:69,  f:0, i:1},
+    {id:'20260629',  v:87,  f:0, i:0},
+    {id:'20260409',  v:423, f:0, i:1},
+    {id:'20260624',  v:60,  f:0, i:0},
+    {id:'20260619b', v:104, f:0, i:0},
+    {id:'20260601',  v:228, f:0, i:0},
+    {id:'20251229',  v:488, f:0, i:0},
+    {id:'20260528b', v:138, f:0, i:0},
+    {id:'20260523',  v:163, f:0, i:0},
+    {id:'20260522',  v:259, f:0, i:4},
+    {id:'20260522b', v:305, f:0, i:2},
+    {id:'20260507',  v:243, f:0, i:1},
+    {id:'20260507b', v:344, f:0, i:11},
+    {id:'20260424',  v:141, f:0, i:0},
+    {id:'20260424b', v:144, f:0, i:0},
+  ]
+};
+
+const WEEK6 = {
+  date: '2026-07-14',
+  entries: [
+    {id:'20260704a', v:73,  f:0, i:0},
+    {id:'20260704b', v:91,  f:0, i:0},
+    {id:'20260704c', v:78,  f:0, i:0},
+    {id:'20260703a', v:78,  f:0, i:0},
+    {id:'20260703b', v:110, f:0, i:0},
+    {id:'20260713',  v:31,  f:0, i:0},
+    {id:'20260629',  v:125, f:0, i:1},
+    {id:'20260409',  v:447, f:0, i:1},
+    {id:'20260624',  v:78,  f:0, i:0},
+    {id:'20260619b', v:122, f:0, i:0},
+    {id:'20260601',  v:232, f:0, i:0},
+    {id:'20251229',  v:502, f:0, i:0},
+    {id:'20260528b', v:148, f:0, i:0},
+    {id:'20260523',  v:177, f:0, i:0},
+    {id:'20260522',  v:302, f:0, i:4},
+    {id:'20260522b', v:311, f:0, i:2},
+    {id:'20260507',  v:251, f:0, i:1},
+    {id:'20260507b', v:352, f:0, i:11},
+    {id:'20260424',  v:149, f:0, i:0},
+    {id:'20260424b', v:153, f:0, i:0},
+  ]
+};
+
+// 今週（7/21）のデータ
+const WEEK7 = {
+  date: '2026-07-21',
+  entries: [
+    {id:'20260704a', v:80,  f:0, i:0},
+    {id:'20260704b', v:96,  f:0, i:0},
+    {id:'20260704c', v:82,  f:0, i:0},
+    {id:'20260703a', v:84,  f:0, i:0},
+    {id:'20260703b', v:116, f:0, i:0},
+    {id:'20260703c', v:76,  f:0, i:1},
+    {id:'20260713',  v:49,  f:0, i:0},
+    {id:'20260629',  v:151, f:0, i:1},
+    {id:'20260409',  v:465, f:0, i:1},
+    {id:'20260624',  v:86,  f:0, i:0},
+    {id:'20260619b', v:142, f:0, i:0},
+    {id:'20260601',  v:243, f:0, i:0},
+    {id:'20251229',  v:516, f:0, i:0},
+    {id:'20260528b', v:154, f:0, i:0},
+    {id:'20260523',  v:200, f:0, i:0},
+    {id:'20260522',  v:345, f:0, i:4},
+    {id:'20260522b', v:317, f:0, i:2},
+    {id:'20260507b', v:362, f:0, i:11},
+    {id:'20260720a', v:200, f:0, i:0},
+    {id:'20260720b', v:213, f:0, i:0},
+  ]
+};
+
+// 今週（7/28）のデータ
+const WEEK8 = {
+  date: '2026-07-28',
+  entries: [
+    {id:'20260704a', v:90,  f:0, i:0},
+    {id:'20260703a', v:90,  f:0, i:0},
+    {id:'20260703b', v:122, f:0, i:0},
+    {id:'20260713',  v:55,  f:0, i:0},
+    {id:'20260629',  v:176, f:0, i:1},
+    {id:'20260409',  v:493, f:0, i:1},
+    {id:'20260624',  v:112, f:0, i:0},
+    {id:'20260619b', v:180, f:0, i:0},
+    {id:'20260601',  v:246, f:0, i:0},
+    {id:'20251229',  v:526, f:0, i:0},
+    {id:'20260528b', v:167, f:0, i:0},
+    {id:'20260523',  v:235, f:0, i:0},
+    {id:'20260522',  v:391, f:0, i:5},
+    {id:'20260522b', v:326, f:0, i:2},
+    {id:'20260507b', v:371, f:0, i:11},
+    {id:'20260720b', v:237, f:0, i:0},
+    {id:'20260727a', v:35,  f:0, i:0},
+    {id:'20260727b', v:34,  f:0, i:0},
+    {id:'20260727c', v:47,  f:0, i:0},
+    {id:'20260725',  v:71,  f:0, i:1},
+  ]
+};
+
+// 今週（8/10）のデータ ※お気に入り・反響は未記録のため0で仮入力(要確認)
+const WEEK9 = {
+  date: '2026-08-10',
+  entries: [
+    {id:'20260704a', v:104, f:0, i:0},
+    {id:'20260713',  v:68,  f:0, i:0},
+    {id:'20260629',  v:213, f:0, i:0},
+    {id:'20260409',  v:531, f:0, i:0},
+    {id:'20260624',  v:132, f:0, i:0},
+    {id:'20260601',  v:259, f:0, i:0},
+    {id:'20251229',  v:547, f:0, i:0},
+    {id:'20260528b', v:184, f:0, i:0},
+    {id:'20260523',  v:271, f:0, i:0},
+    {id:'20260522b', v:336, f:0, i:0},
+    {id:'20260720b', v:258, f:0, i:0},
+    {id:'20260727a', v:47,  f:0, i:0},
+    {id:'20260727b', v:53,  f:0, i:0},
+    {id:'20260727c', v:79,  f:0, i:0},
+    {id:'20260725',  v:100, f:0, i:0},
+    {id:'20260810a', v:45,  f:0, i:0},
+    {id:'20260810b', v:87,  f:0, i:0},
+    {id:'20260810c', v:83,  f:0, i:0},
+  ]
+};
+
+// 今週（8/18）のデータ ※お気に入り・反響は未記録のため0で仮入力(要確認)
+const WEEK10 = {
+  date: '2026-08-18',
+  entries: [
+    {id:'20260704a', v:114, f:0, i:0},
+    {id:'20260629',  v:244, f:0, i:0},
+    {id:'20260409',  v:553, f:0, i:0},
+    {id:'20260624',  v:158, f:0, i:0},
+    {id:'20260619b', v:239, f:0, i:0},
+    {id:'20260601',  v:266, f:0, i:0},
+    {id:'20251229',  v:566, f:0, i:0},
+    {id:'20260528b', v:197, f:0, i:0},
+    {id:'20260523',  v:307, f:0, i:0},
+    {id:'20260522b', v:347, f:0, i:0},
+    {id:'20260720b', v:269, f:0, i:0},
+    {id:'20260727a', v:56,  f:0, i:0},
+    {id:'20260727b', v:55,  f:0, i:0},
+    {id:'20260727c', v:90,  f:0, i:0},
+    {id:'20260725',  v:168, f:0, i:0},
+    {id:'20260810a', v:65,  f:0, i:0},
+    {id:'20260810b', v:103, f:0, i:0},
+    {id:'20260810c', v:104, f:0, i:0},
+    {id:'20260818a', v:9,   f:0, i:0},
+    {id:'20260818b', v:111, f:0, i:0},
+  ]
+};
+
+// 今週（8/25）のデータ ※お気に入り・反響は未記録のため0で仮入力(要確認)
+const WEEK11 = {
+  date: '2026-08-25',
+  entries: [
+    {id:'20260704a', v:118, f:0, i:0},
+    {id:'20260629',  v:271, f:0, i:0},
+    {id:'20260409',  v:582, f:0, i:0},
+    {id:'20260624',  v:177, f:0, i:0},
+    {id:'20260619b', v:252, f:0, i:0},
+    {id:'20260601',  v:294, f:0, i:0},
+    {id:'20251229',  v:629, f:0, i:0},
+    {id:'20260528b', v:256, f:0, i:0},
+    {id:'20260523',  v:390, f:0, i:0},
+    {id:'20260522b', v:404, f:0, i:0},
+    {id:'20260720b', v:279, f:0, i:0},
+    {id:'20260727b', v:67,  f:0, i:0},
+    {id:'20260727c', v:102, f:0, i:0},
+    {id:'20260725',  v:246, f:0, i:0},
+    {id:'20260810a', v:76,  f:0, i:0},
+    {id:'20260810b', v:116, f:0, i:0},
+    {id:'20260810c', v:115, f:0, i:0},
+    {id:'20260818a', v:76,  f:0, i:0},
+    {id:'20260818b', v:129, f:0, i:0},
+    {id:'20260825a', v:55,  f:0, i:0},
+  ]
+};
+
+// 今週（9/1）のデータ ※9/2表示の累計から9/2分の日次アクセス数を差し引いて算出。お気に入り・反響は未記録のため0で仮入力(要確認)
+const WEEK12 = {
+  date: '2026-09-01',
+  entries: [
+    {id:'20260704a', v:125, f:0, i:0},
+    {id:'20260629',  v:305, f:0, i:0},
+    {id:'20260409',  v:599, f:0, i:0},
+    {id:'20260624',  v:195, f:0, i:0},
+    {id:'20260619b', v:268, f:0, i:0},
+    {id:'20260601',  v:302, f:0, i:0},
+    {id:'20251229',  v:672, f:0, i:0},
+    {id:'20260528b', v:286, f:0, i:0},
+    {id:'20260523',  v:437, f:0, i:0},
+    {id:'20260720b', v:288, f:0, i:0},
+    {id:'20260727b', v:76,  f:0, i:0},
+    {id:'20260727c', v:112, f:0, i:0},
+    {id:'20260725',  v:343, f:0, i:0},
+    {id:'20260810b', v:128, f:0, i:0},
+    {id:'20260810c', v:128, f:0, i:0},
+    {id:'20260818a', v:87,  f:0, i:0},
+    {id:'20260818b', v:142, f:0, i:0},
+    {id:'20260825a', v:74,  f:0, i:0},
+    {id:'20260902a', v:88,  f:0, i:0},
+    {id:'20260902b', v:233, f:0, i:0},
+  ]
+};
+
+// 今週（9/8）のデータ ※フェリスビレー新井薬師前・富士見台/練馬高野台は掲載終了で除外、中野区一棟アパート・練馬区店舗付き住宅を新規追加。お気に入りは未記録のため0で仮入力(要確認)
+const WEEK13 = {
+  date: '2026-09-08',
+  entries: [
+    {id:'20260629',  v:330, f:1, i:0},
+    {id:'20260409',  v:618, f:1, i:0},
+    {id:'20260624',  v:208, f:0, i:0},
+    {id:'20260619b', v:363, f:0, i:0},
+    {id:'20260601',  v:304, f:0, i:0},
+    {id:'20251229',  v:688, f:2, i:0},
+    {id:'20260528b', v:300, f:0, i:0},
+    {id:'20260523',  v:473, f:1, i:0},
+    {id:'20260720b', v:294, f:0, i:0},
+    {id:'20260727b', v:81,  f:0, i:0},
+    {id:'20260727c', v:119, f:0, i:0},
+    {id:'20260725',  v:420, f:1, i:0},
+    {id:'20260810b', v:139, f:1, i:0},
+    {id:'20260810c', v:135, f:0, i:0},
+    {id:'20260818b', v:153, f:0, i:0},
+    {id:'20260825a', v:80,  f:0, i:0},
+    {id:'20260902a', v:115, f:0, i:0},
+    {id:'20260902b', v:248, f:0, i:0},
+    {id:'20260818c', v:97,  f:0, i:0},
+    {id:'20260905a', v:56,  f:0, i:0},
+  ]
+};
+
+// 今週（9/15）のデータ ※練馬春日部町・東中野・足立区築浅一棟アパート・パーム谷塚・アイコート桜台・品川区グランヴァーレ荏原東301は今回データ未取得のためトラッカーから除外。シャトレー松濤・Privia亀有・Clavier祐天寺/Privia祐天寺・品川区西大井5丁目・横浜市青葉区奈良5丁目を新規追加。お気に入りは未記録のため0で仮入力(要確認)
+const WEEK14 = {
+  date: '2026-09-15',
+  entries: [
+    {id:'20260629',  v:351, f:1, i:0},
+    {id:'20260624',  v:222, f:0, i:0},
+    {id:'20260619b', v:403, f:0, i:0},
+    {id:'20260601',  v:308, f:0, i:0},
+    {id:'20251229',  v:718, f:2, i:0},
+    {id:'20260523',  v:500, f:1, i:0},
+    {id:'20260727c', v:135, f:0, i:0},
+    {id:'20260725',  v:520, f:1, i:0},
+    {id:'20260810b', v:151, f:1, i:0},
+    {id:'20260810c', v:142, f:0, i:0},
+    {id:'20260818b', v:158, f:0, i:0},
+    {id:'20260902a', v:135, f:0, i:0},
+    {id:'20260818c', v:113, f:0, i:0},
+    {id:'20260905a', v:74,  f:0, i:0},
+    {id:'20260913a', v:38,  f:0, i:0},
+    {id:'20260913b', v:67,  f:0, i:0},
+    {id:'20260913c', v:52,  f:0, i:0},
+    {id:'20260910a', v:93,  f:0, i:0},
+    {id:'20260910b', v:80,  f:0, i:0},
+  ]
+};
+
+let D = {props: DEFAULTS.map(p=>({...p})), weeks: [WEEK1, WEEK2, WEEK3, WEEK4, WEEK5, WEEK6, WEEK7, WEEK8, WEEK9, WEEK10, WEEK11, WEEK12, WEEK13, WEEK14]};
+
+(function init(){
+  const latestDate = [...D.weeks].sort((a,b)=>b.date.localeCompare(a.date))[0]?.date
+    || new Date().toISOString().slice(0,10);
+  document.getElementById('inputDate').value = latestDate;
+  document.getElementById('dateBadge').textContent = '集計日: ' + latestDate;
+  updatePeriodLabel(latestDate);
+  drawRanking();
+})();
+
+function onDateChange(){
+  const v = document.getElementById('inputDate').value;
+  document.getElementById('dateBadge').textContent = '集計日: ' + (v||'—');
+  updatePeriodLabel(v);
+  drawInput();
+}
+
+function updatePeriodLabel(dateStr){
+  const el = document.getElementById('periodLabel');
+  if(!el||!dateStr) return;
+  const end = new Date(dateStr);
+  const start = new Date(end);
+  start.setDate(start.getDate()-6);
+  const fmt = d=>(d.getMonth()+1)+'/'+d.getDate();
+  el.textContent = fmt(start)+' 〜 '+fmt(end);
+}
+
+function go(tab){
+  ['input','ranking','history','data'].forEach(t=>{
+    document.getElementById('sec-'+t).classList.toggle('active',t===tab);
+    document.getElementById('tab-'+t).classList.toggle('active',t===tab);
+  });
+  if(tab==='ranking') drawRanking();
+  if(tab==='history') drawHistory();
+}
+
+function addProp(){
+  D.props.push({id:'p'+Date.now(),name:'物件名を入力',start:''});
+  drawInput();
+}
+
+// 掲載2週間未満かチェック
+function isNew(startStr, refDateStr){
+  if(!startStr) return false;
+  const start = new Date(startStr);
+  const ref = new Date(refDateStr);
+  const days = (ref - start) / 86400000;
+  return days < 14;
+}
+
+function drawInput(){
+  const dateVal = document.getElementById('inputDate').value;
+  const week = D.weeks.find(w=>w.date===dateVal);
+  let html='';
+  D.props.forEach((p,i)=>{
+    const e = week?(week.entries.find(e=>e.id===p.id)||{}):{};
+    const newTag = dateVal && isNew(p.start, dateVal) ? '<span class="new-badge">2週未満</span>' : '';
+    html+=`<tr class="row" data-id="${p.id}">
+      <td class="num">${i+1}</td>
+      <td><input class="name-input" type="text" value="${esc(p.name)}" onchange="updateName('${p.id}',this.value)">${newTag}</td>
+      <td class="center"><input type="number" min="0" value="${e.v??''}" placeholder="0" data-f="v"></td>
+      <td class="center"><input type="number" min="0" value="${e.f??''}" placeholder="0" data-f="f"></td>
+      <td class="center"><input type="number" min="0" value="${e.i??''}" placeholder="0" data-f="i"></td>
+      <td class="center"><input type="date" value="${p.start||''}" onchange="updateStart('${p.id}',this.value)" style="width:130px;font-size:11px;padding:4px 6px;"></td>
+    </tr>`;
+  });
+  document.getElementById('inputBody').innerHTML = html||'<tr><td colspan="6"><div class="empty">物件がありません</div></td></tr>';
+}
+
+function updateName(id,val){const p=D.props.find(p=>p.id===id);if(p)p.name=val;}
+function updateStart(id,val){const p=D.props.find(p=>p.id===id);if(p)p.start=val;}
+
+function saveWeek(){
+  const dateVal=document.getElementById('inputDate').value;
+  if(!dateVal){alert('集計日を選択してください');return;}
+  document.querySelectorAll('#inputBody tr.row').forEach(row=>{
+    updateName(row.dataset.id,row.querySelector('input[type=text]').value);
+  });
+  const entries=[];
+  document.querySelectorAll('#inputBody tr.row').forEach(row=>{
+    entries.push({id:row.dataset.id,
+      v:+row.querySelector('[data-f=v]').value||0,
+      f:+row.querySelector('[data-f=f]').value||0,
+      i:+row.querySelector('[data-f=i]').value||0,
+    });
+  });
+  const idx=D.weeks.findIndex(w=>w.date===dateVal);
+  if(idx>=0)D.weeks[idx].entries=entries;
+  else D.weeks.push({date:dateVal,entries});
+  alert('✓ '+dateVal+' のデータを保存しました！\n「データ管理」タブからCSVをエクスポートして保存してください。');
+}
+
+function drawRanking(){
+  const el=document.getElementById('rankContent');
+  if(!D.weeks.length){el.innerHTML='<div class="empty">まだデータがありません</div>';return;}
+  const sw=[...D.weeks].sort((a,b)=>b.date.localeCompare(a.date));
+  const latest=sw[0], prev=sw[1];
+
+  const items=D.props.map(p=>{
+    const e=latest.entries.find(e=>e.id===p.id)||{};
+    const pe=prev?prev.entries.find(e=>e.id===p.id):null;
+    const diff=pe!=null?(e.v||0)-pe.v:null;
+    const newProp=isNew(p.start, latest.date);
+    return{id:p.id,name:p.name,v:e.v||0,f:e.f||0,i:e.i||0,diff:diff,start:p.start,newProp:newProp};
+  });
+
+  // 今週増加数ランキング（2週未満除外）
+  const byDiff=[...items].sort((a,b)=>{
+    const da=a.diff!==null?a.diff:a.v;
+    const db=b.diff!==null?b.diff:b.v;
+    return db-da;
+  });
+
+  // 累計ランキング
+  const byCumul=[...items].sort((a,b)=>b.v-a.v);
+
+  // 入れ替え候補（2週未満・反響あり・お気に入り3件以上は除外）
+  const low=[...items]
+    .filter(it=>!it.newProp && it.i===0 && it.f<3)
+    .sort((a,b)=>{
+      const da=a.diff!==null?a.diff:a.v;
+      const db=b.diff!==null?b.diff:b.v;
+      return da-db;
+    }).slice(0,3);
+
+  const periodEl=document.getElementById('periodLabel');
+  const periodStr=periodEl?periodEl.textContent:'';
+
+  let html=`<div style="font-size:12px;color:var(--muted);margin-bottom:12px;">最新集計：${latest.date}</div>`;
+
+  // 入れ替え候補
+  if(low.length){
+    html+=`<div class="alert-box"><div class="alert-title">⚠ 入れ替え候補（掲載2週未満・反響あり・お気に入り3件以上は除外済み）</div>`;
+    low.forEach(it=>{
+      const score=it.diff!==null?it.diff:it.v;
+      const label=it.diff!==null?'今週増加':'閲覧数';
+      html+=`<div class="alert-row">
+        <span style="flex:1;font-size:13px;">${esc(it.name)}</span>
+        <span style="font-family:'DM Mono',monospace;color:var(--accent2);">${periodStr} ${label} ${score}</span>
+      </div>`;
+    });
+    html+=`</div>`;
+  }
+
+  // 今週増加数ランキング
+  html+=`<div class="rank-card"><div class="rank-header">今週のアクセス増加数ランキング（${periodStr}）</div>`;
+  byDiff.forEach((it,i)=>{
+    const nc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    const score=it.diff!==null?it.diff:it.v;
+    const scoreStr=it.diff!==null?(score>=0?'+'+score:String(score)):String(score);
+    const scoreCol=it.diff===null?'var(--accent)':score>0?'var(--accent3)':score===0?'var(--muted)':'var(--accent2)';
+    const newTag=it.newProp?'<span class="new-badge">2週未満</span>':'';
+    html+=`<div class="rank-row">
+      <div class="rnum ${nc}">${i+1}</div>
+      <div class="rname">${esc(it.name)}${newTag}<br><span style="font-size:10px;color:var(--muted);">掲載開始 ${it.start}</span></div>
+      <div style="text-align:right;"><div class="rscore" style="color:${scoreCol}">${scoreStr}</div><div style="font-size:10px;color:var(--muted);">増加数</div></div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  // 累計アクセス数ランキング
+  html+=`<div class="rank-card"><div class="rank-header">累計アクセス数ランキング</div>`;
+  byCumul.forEach((it,i)=>{
+    const nc=i===0?'gold':i===1?'silver':i===2?'bronze':'';
+    html+=`<div class="rank-row">
+      <div class="rnum ${nc}">${i+1}</div>
+      <div class="rname">${esc(it.name)}<br><span style="font-size:10px;color:var(--muted);">掲載開始 ${it.start}</span></div>
+      <div style="text-align:right;"><div class="rscore" style="color:var(--accent)">${it.v}</div><div style="font-size:10px;color:var(--muted);">累計</div></div>
+    </div>`;
+  });
+  html+=`</div>`;
+
+  el.innerHTML=html;
+}
+
+function drawHistory(){
+  const el=document.getElementById('histContent');
+  if(!D.weeks.length){el.innerHTML='<div class="empty">まだデータがありません</div>';return;}
+  const sw=[...D.weeks].sort((a,b)=>b.date.localeCompare(a.date));
+  let html=`<div style="overflow-x:auto;"><table class="htbl"><thead><tr>
+    <th>集計日</th><th>物件名</th>
+    <th style="text-align:right;">アクセス</th><th style="text-align:right;">お気に入り</th><th style="text-align:right;">反響</th>
+  </tr></thead><tbody>`;
+  sw.forEach(week=>{
+    [...week.entries].sort((a,b)=>b.v-a.v).forEach(e=>{
+      const p=D.props.find(p=>p.id===e.id);
+      html+=`<tr><td style="font-family:'DM Mono',monospace;font-size:12px;">${week.date}</td>
+        <td>${esc(p?.name||'—')}</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;">${e.v}</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;">${e.f}</td>
+        <td style="text-align:right;font-family:'DM Mono',monospace;">${e.i}</td></tr>`;
+    });
+  });
+  html+=`</tbody></table></div>`;
+  el.innerHTML=html;
+}
+
+function doExport(){
+  const lines=['## PROPS','id,name,start'];
+  D.props.forEach(p=>lines.push(p.id+','+ce(p.name)+','+(p.start||'')));
+  lines.push('## WEEKS','date,id,v,f,i');
+  D.weeks.forEach(w=>w.entries.forEach(e=>lines.push([w.date,e.id,e.v,e.f,e.i].join(','))));
+  document.getElementById('exportArea').value=lines.join('\n');
+}
+function doCopy(){doExport();const ta=document.getElementById('exportArea');ta.select();document.execCommand('copy');alert('コピーしました！');}
+function doImport(){
+  const txt=document.getElementById('importArea').value.trim();
+  if(!txt){alert('CSVを貼り付けてください');return;}
+  try{
+    const lines=txt.split('\n').map(l=>l.trim()).filter(l=>l);
+    let mode=null;const props=[],wmap={};
+    lines.forEach(l=>{
+      if(l==='## PROPS'){mode='p';return;}
+      if(l==='## WEEKS'){mode='w';return;}
+      if(l.startsWith('id,')||l.startsWith('date,'))return;
+      const c=cp(l);
+      if(mode==='p'&&c.length>=2)props.push({id:c[0],name:c[1],start:c[2]||''});
+      else if(mode==='w'&&c.length>=5){
+        const d=c[0];if(!wmap[d])wmap[d]={date:d,entries:[]};
+        wmap[d].entries.push({id:c[1],v:+c[2]||0,f:+c[3]||0,i:+c[4]||0});
+      }
+    });
+    D.props=props;D.weeks=Object.values(wmap);
+    document.getElementById('importArea').value='';
+    alert('✓ 読み込みました！物件'+props.length+'件、'+D.weeks.length+'週分');
+    drawInput();
+  }catch(e){alert('エラー: '+e.message);}
+}
+function doReset(){
+  if(!confirm('全データをリセットしますか？'))return;
+  D={props:DEFAULTS.map(p=>({...p})),weeks:[WEEK1,WEEK2,WEEK3,WEEK4,WEEK5,WEEK6,WEEK7,WEEK8]};
+  drawInput();
+}
+function esc(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');}
+function ce(s){return(s.includes(',')||s.includes('"'))?'"'+s.replace(/"/g,'""')+'"':s;}
+function cp(line){const r=[];let c='',q=false;for(let i=0;i<line.length;i++){const ch=line[i];if(ch==='"')q=!q;else if(ch===','&&!q){r.push(c);c='';}else c+=ch;}r.push(c);return r;}
+</script>
+</body>
+</html>
